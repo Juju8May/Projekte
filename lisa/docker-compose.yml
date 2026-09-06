@@ -1,0 +1,47 @@
+services:
+  lisa-db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    image: lisa-db:local
+    container_name: lisa-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lisa
+      POSTGRES_USER: lisa
+      POSTGRES_PASSWORD: lisa_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - lisa-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lisa -d lisa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  lisa-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: lisa-api
+    restart: unless-stopped
+    depends_on:
+      lisa-db:
+        condition: service_healthy
+    environment:
+      JDBC_DATABASE_URL: jdbc:postgresql://lisa-db:5432/lisa
+      DATABASE_USER: lisa
+      DATABASE_PASSWORD: lisa_dev_password
+      LISA_API_KEY: ${LISA_API_KEY:?Set LISA_API_KEY in .env before starting the API}
+      LISA_ADMIN_USERNAME: ${LISA_ADMIN_USERNAME:-admin}
+      LISA_ADMIN_PASSWORD: ${LISA_ADMIN_PASSWORD:?Set LISA_ADMIN_PASSWORD in .env before starting the API}
+      LISA_USER_USERNAME: ${LISA_USER_USERNAME:-maya}
+      LISA_USER_PASSWORD: ${LISA_USER_PASSWORD:?Set LISA_USER_PASSWORD in .env before starting the API}
+      LISA_USER_CONVERSATION_ID: ${LISA_USER_CONVERSATION_ID:-maya}
+      LISA_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3002
+    ports:
+      - "8080:8080"
+
+volumes:
+  lisa-postgres-data:

@@ -1,0 +1,32 @@
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: lisa-api
+  datasource:
+    url: ${JDBC_DATABASE_URL:jdbc:postgresql://localhost:5432/lisa}
+    username: ${DATABASE_USER:lisa}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 3000
+      leak-detection-threshold: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  security:
+    api-key: ${LISA_API_KEY:}
+    allowed-origins: ${LISA_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3002}
+    rate-limit-per-minute: ${LISA_RATE_LIMIT_PER_MINUTE:60}

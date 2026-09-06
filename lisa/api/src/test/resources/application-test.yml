@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lisa_test
+    username: lisa_test
+    password: lisa_test
+
+app:
+  security:
+    api-key: test-only-key
+    allowed-origins: http://localhost:3000
+    rate-limit-per-minute: 1000
