@@ -1,13 +1,13 @@
-package com.lisa.api.auth;
+    package com.lisa.api.auth;
+
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class UserAuthService {

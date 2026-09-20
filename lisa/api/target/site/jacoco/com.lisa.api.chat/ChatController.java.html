@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.chat</a> &gt; <span class="el_source">ChatController.java</span></div><h1>ChatController.java</h1><pre class="source lang-java linenums">package com.lisa.api.chat;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import static com.lisa.api.chat.ChatDtos.ConversationResponse;
+import static com.lisa.api.chat.ChatDtos.CreateMessageRequest;
+import static com.lisa.api.chat.ChatDtos.MessageResponse;
+
+@RestController
+@RequestMapping(&quot;/api/v1/conversations&quot;)
+public class ChatController {
+    private final ChatRepository repository;
+
+<span class="fc" id="L24">    public ChatController(ChatRepository repository) {</span>
+<span class="fc" id="L25">        this.repository = repository;</span>
+<span class="fc" id="L26">    }</span>
+
+    @GetMapping
+    public List&lt;ConversationResponse&gt; conversations() {
+<span class="fc" id="L30">        return repository.findConversations();</span>
+    }
+
+    @GetMapping(&quot;/{conversationId}/messages&quot;)
+    public ResponseEntity&lt;List&lt;MessageResponse&gt;&gt; messages(@PathVariable String conversationId) {
+<span class="fc bfc" id="L35" title="All 4 branches covered.">        if (!validId(conversationId) || !repository.conversationExists(conversationId)) {</span>
+<span class="fc" id="L36">            return ResponseEntity.notFound().build();</span>
+        }
+<span class="fc" id="L38">        return ResponseEntity.ok(repository.findMessages(conversationId));</span>
+    }
+
+    @PostMapping(&quot;/{conversationId}/messages&quot;)
+    public ResponseEntity&lt;MessageResponse&gt; userMessage(
+            @PathVariable String conversationId,
+            @Valid @RequestBody CreateMessageRequest request) {
+<span class="fc" id="L45">        return addMessage(conversationId, &quot;user&quot;, request);</span>
+    }
+
+    @PostMapping(&quot;/{conversationId}/replies&quot;)
+    public ResponseEntity&lt;MessageResponse&gt; lisaReply(
+            @PathVariable String conversationId,
+            @Valid @RequestBody CreateMessageRequest request) {
+<span class="fc" id="L52">        return addMessage(conversationId, &quot;lisa&quot;, request);</span>
+    }
+
+    private ResponseEntity&lt;MessageResponse&gt; addMessage(String conversationId, String role, CreateMessageRequest request) {
+<span class="pc bpc" id="L56" title="2 of 4 branches missed.">        if (!validId(conversationId) || !repository.conversationExists(conversationId)) {</span>
+<span class="nc" id="L57">            return ResponseEntity.notFound().build();</span>
+        }
+<span class="fc" id="L59">        return ResponseEntity.status(HttpStatus.CREATED).body(repository.addMessage(conversationId, role, request.text().trim()));</span>
+    }
+
+    private boolean validId(String conversationId) {
+<span class="pc bpc" id="L63" title="1 of 4 branches missed.">        return conversationId != null &amp;&amp; conversationId.matches(&quot;[a-z0-9-]{1,64}&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

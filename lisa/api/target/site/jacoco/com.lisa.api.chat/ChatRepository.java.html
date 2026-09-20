@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ChatRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.chat</a> &gt; <span class="el_source">ChatRepository.java</span></div><h1>ChatRepository.java</h1><pre class="source lang-java linenums">package com.lisa.api.chat;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+import static com.lisa.api.chat.ChatDtos.ConversationResponse;
+import static com.lisa.api.chat.ChatDtos.MessageResponse;
+
+@Repository
+public class ChatRepository {
+    private final JdbcTemplate jdbc;
+
+<span class="fc" id="L15">    public ChatRepository(JdbcTemplate jdbc) {</span>
+<span class="fc" id="L16">        this.jdbc = jdbc;</span>
+<span class="fc" id="L17">    }</span>
+
+    public List&lt;ConversationResponse&gt; findConversations() {
+<span class="fc" id="L20">        return jdbc.query(&quot;&quot;&quot;</span>
+                SELECT c.id, c.name, c.initials, c.status, c.topic,
+                       COALESCE(to_char(MAX(m.created_at), 'HH12:MI AM'), 'No messages') AS last_seen,
+                       COUNT(m.id) FILTER (WHERE m.role = 'user' AND m.read_at IS NULL)::int AS unread,
+                       c.flagged
+                FROM conversations c
+                LEFT JOIN messages m ON m.conversation_id = c.id
+                GROUP BY c.id
+                ORDER BY MAX(m.created_at) DESC NULLS LAST
+<span class="fc" id="L29">                &quot;&quot;&quot;, (rs, rowNum) -&gt; new ConversationResponse(</span>
+<span class="fc" id="L30">                rs.getString(&quot;id&quot;), rs.getString(&quot;name&quot;), rs.getString(&quot;initials&quot;),</span>
+<span class="fc" id="L31">                rs.getString(&quot;status&quot;), rs.getString(&quot;topic&quot;), rs.getString(&quot;last_seen&quot;),</span>
+<span class="fc" id="L32">                rs.getInt(&quot;unread&quot;), rs.getBoolean(&quot;flagged&quot;), findMessages(rs.getString(&quot;id&quot;))));</span>
+    }
+
+    public List&lt;MessageResponse&gt; findMessages(String conversationId) {
+<span class="fc" id="L36">        return jdbc.query(&quot;&quot;&quot;</span>
+                SELECT id, role, text, to_char(created_at, 'HH12:MI AM') AS time
+                FROM messages
+                WHERE conversation_id = ?
+                ORDER BY created_at ASC, id ASC
+<span class="fc" id="L41">                &quot;&quot;&quot;, (rs, rowNum) -&gt; new MessageResponse(</span>
+<span class="fc" id="L42">                rs.getLong(&quot;id&quot;), rs.getString(&quot;role&quot;), rs.getString(&quot;text&quot;), rs.getString(&quot;time&quot;)), conversationId);</span>
+    }
+
+    public MessageResponse addMessage(String conversationId, String role, String text) {
+<span class="fc" id="L46">        return jdbc.queryForObject(&quot;&quot;&quot;</span>
+                INSERT INTO messages (conversation_id, role, text, read_at)
+                VALUES (?, ?, ?, CASE WHEN ? = 'lisa' THEN NOW() ELSE NULL END)
+                RETURNING id, role, text, to_char(created_at, 'HH12:MI AM') AS time
+<span class="nc" id="L50">                &quot;&quot;&quot;, (rs, rowNum) -&gt; new MessageResponse(</span>
+<span class="nc" id="L51">                rs.getLong(&quot;id&quot;), rs.getString(&quot;role&quot;), rs.getString(&quot;text&quot;), rs.getString(&quot;time&quot;)),</span>
+                conversationId, role, text, role);
+    }
+
+    public boolean conversationExists(String conversationId) {
+<span class="fc" id="L56">        Boolean exists = jdbc.queryForObject(&quot;SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)&quot;, Boolean.class, conversationId);</span>
+<span class="fc" id="L57">        return Boolean.TRUE.equals(exists);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

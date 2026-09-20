@@ -32,5 +32,42 @@ public class UserAuthControllerTest {
                 response.getBody());
     }
 
-}
+    @Test
+    void loginReturnsUnauthorizedForInvalidLoginRequest() {
+        UserAuthController controller = new UserAuthController(authService);
+        when(authService.login("admin", "wrongpassword")).thenReturn(null);
+
+        ResponseEntity<?> response = controller.login(
+                new UserAuthController.LoginRequest("  admin  ", "wrongpassword"));
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    void registerReturnsResponseEntityForValidRegisterRequest() {
+        UserAuthController controller = new UserAuthController(authService);
+        UserAuthService.LoginResult registerResult = new UserAuthService.LoginResult(
+            1L, "newuser", "test-token", true, "test-conversation-id");
+        when(authService.register("newuser", "password")).thenReturn(registerResult);
+
+        ResponseEntity<?> response = controller.register(
+                new UserAuthController.LoginRequest("  newuser  ", "password"));
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(
+                Map.of("token", "test-token", "conversationId", "test-conversation-id", "expiresInSeconds", 8 * 60 * 60),
+                response.getBody());
+    }
+
+    @Test
+    void registerReturnsConflictForExistingUsername() {
+        UserAuthController controller = new UserAuthController(authService);
+        when(authService.register("existinguser", "password")).thenReturn(null);
+
+        ResponseEntity<?> response = controller.register(
+                new UserAuthController.LoginRequest("  existinguser  ", "password"));
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
     
+}
