@@ -1,8 +1,7 @@
 package com.lisa.api.auth;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -32,6 +33,7 @@ public class AuthController {
     @PostMapping("/session")
     public ResponseEntity<Map<String, Boolean>> session(@RequestHeader(value = "Authorization", required = false) String authorization) {
         String token = authorization != null && authorization.startsWith("Bearer ") ? authorization.substring(7) : "";
+        if (token.isBlank()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("not authenticated", false));
         return ResponseEntity.ok(Map.of("authenticated", authService.isValid(token)));
     }
 

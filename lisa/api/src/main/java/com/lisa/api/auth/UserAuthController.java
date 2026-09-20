@@ -1,8 +1,7 @@
 package com.lisa.api.auth;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @RestController
 @RequestMapping("/api/v1/user-auth")
@@ -26,7 +27,7 @@ public class UserAuthController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         UserAuthService.LoginResult result = authService.login(request.username().trim(), request.password());
         if (result == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
-        return ResponseEntity.ok(Map.of("token", result.username(), "conversationId", result.conversationId(), "expiresInSeconds", 8 * 60 * 60));
+        return ResponseEntity.ok(Map.of("token", result.token(), "conversationId", result.conversationId(), "expiresInSeconds", 8 * 60 * 60));
     }
 
     @PostMapping("/session")
