@@ -1,4 +1,9 @@
-lisa/api/target/classes/com/lisa/api/LisaApiApplication.class
 *.class
 */target/*
 TEST-*.xml
+**.log
+*.xml
+*.iml
+*.ipr
+*.lst
+*.txt
