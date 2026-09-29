@@ -2,6 +2,7 @@ package com.lisa.api.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,70 +16,46 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceTest {
+class AuthServiceTest {
+    private static final String FIND_ADMIN_SQL =
+            "SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?";
+
     @Mock
     private JdbcTemplate jdbc;
 
     @Mock
     private PasswordHasher hasher;
 
-    private AuthService authService;
-
     @Test
-    void loginReturnsTokenForValidCredentials() {
-        String adminUsername = "admin";
-        String adminPassword = "secret";
-        authService = new AuthService(jdbc, hasher, adminUsername, "");
-        when(jdbc.query(
-                eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername)))
+    void loginReturnsTokenAndUpdatesLastLoginForValidCredentials() {
+        AuthService service = new AuthService(jdbc, hasher, "admin", "");
+        when(jdbc.query(eq(FIND_ADMIN_SQL), any(RowMapper.class), eq("admin")))
                 .thenReturn(java.util.List.of(true));
-        when(jdbc.update("UPDATE admin_users SET last_login_at = NOW() WHERE username = ?", "admin")).thenReturn(1);
 
-        String token = authService.login(adminUsername, adminPassword);
+        String token = service.login("admin", "secret");
 
+        assertNotNull(token);
         assertEquals(72, token.length());
-        verify(jdbc).query(
-                eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername));
+        assertTrue(service.isValid(token));
         verify(jdbc).update("UPDATE admin_users SET last_login_at = NOW() WHERE username = ?", "admin");
     }
 
     @Test
     void loginReturnsNullForInvalidCredentials() {
-        String adminUsername = "admin";
-        String adminPassword = "wrongpassword";
-        authService = new AuthService(jdbc, hasher, adminUsername, "");
-        when(jdbc.query(
-                eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername)))
+        AuthService service = new AuthService(jdbc, hasher, "admin", "");
+        when(jdbc.query(eq(FIND_ADMIN_SQL), any(RowMapper.class), eq("admin")))
                 .thenReturn(java.util.List.of(false));
-        String token = authService.login(adminUsername, adminPassword);
 
-        verify(jdbc).query(
-                eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername));
-        assertEquals(null, token);
+        String token = service.login("admin", "wrong-password");
+
+        assertNull(token);
+        verify(jdbc).query(eq(FIND_ADMIN_SQL), any(RowMapper.class), eq("admin"));
     }
 
     @Test
-    void isValidReturnsTrueForValidToken() {
-        authService = new AuthService(jdbc, hasher, "admin", "");
-        when(jdbc.query(
-                eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq("admin")))
-                .thenReturn(java.util.List.of(true));
+    void isValidReturnsFalseForUnknownToken() {
+        AuthService service = new AuthService(jdbc, hasher, "admin", "");
 
-        String token = authService.login("admin", "secret");
-
-        assertNotNull(token);
-        assertTrue(authService.isValid(token));
+        assertEquals(false, service.isValid("unknown-token"));
     }
-
-
 }

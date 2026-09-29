@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthControllerTest {
+class AuthControllerTest {
     @Mock
     private AuthService authService;
 
@@ -29,56 +29,48 @@ public class AuthControllerTest {
                 new AuthController.LoginRequest("  admin  ", "secret"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(
-                Map.of("token", "test-token", "expiresInSeconds", 8 * 60 * 60),
-                response.getBody());
+        assertEquals(Map.of("token", "test-token", "expiresInSeconds", 8 * 60 * 60), response.getBody());
         verify(authService).login("admin", "secret");
     }
 
     @Test
-    void loginNotAllowedShouldFail() {
-        when(authService.login("false", "loginPassword")).thenReturn(null);
+    void loginReturnsUnauthorizedForInvalidCredentials() {
+        when(authService.login("admin", "wrong-password")).thenReturn(null);
 
         ResponseEntity<?> response = authController.login(
-                new AuthController.LoginRequest("false", "loginPassword"));
+                new AuthController.LoginRequest("admin", "wrong-password"));
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(
-                Map.of("error", "Invalid credentials"),
-                response.getBody());
-        verify(authService).login("false", "loginPassword");
+        assertEquals(Map.of("error", "Invalid credentials"), response.getBody());
+        verify(authService).login("admin", "wrong-password");
     }
 
     @Test
-    void sessionReturnsAuthenticatedTrueForValidTokenWithHeader() {
-        when(authService.isValid("validToken")).thenReturn(true);
+    void sessionReturnsAuthenticatedTrueForValidBearerToken() {
+        when(authService.isValid("valid-token")).thenReturn(true);
 
-        ResponseEntity<Map<String, Boolean>> response = authController.session(
-                "Bearer validToken"
-                );
+        ResponseEntity<Map<String, Boolean>> response = authController.session("Bearer valid-token");
+
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Map.of("authenticated", true), response.getBody());
+        verify(authService).isValid("valid-token");
     }
 
     @Test
-    void sessionReturnsAuthenticatedFalseForValidTokenWithoutHeader() {
+    void sessionRejectsMissingBearerToken() {
+        ResponseEntity<Map<String, Boolean>> response = authController.session("valid-token");
 
-        ResponseEntity<Map<String, Boolean>> response = authController.session(
-                "validToken"
-        );
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals(Map.of("not authenticated", false), response.getBody());
     }
-    
-    @Test
-    void sessionReturnsAuthenticatedFalseForInvalidToken() {
-        when(authService.isValid("invalidToken")).thenReturn(false);
 
-        ResponseEntity<Map<String, Boolean>> response = authController.session(
-                "Bearer invalidToken"
-        );
+    @Test
+    void sessionReturnsFalseForInvalidBearerToken() {
+        when(authService.isValid("invalid-token")).thenReturn(false);
+
+        ResponseEntity<Map<String, Boolean>> response = authController.session("Bearer invalid-token");
+
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(Map.of("authenticated", false), response.getBody());
     }
-
 }

@@ -9,9 +9,17 @@ user-invocable: true
 
 ## Purpose
 
-Create focused unit tests for Java Maven projects. Follow the complete workflow below and keep changes limited to newly created tests for the requested production classes.
+Create focused unit tests for Java Maven projects without requiring an extra approval step from the user. Generate tests only for the production classes explicitly selected by the user or directly required to validate that selection.
 
 Existing tests are protected: do not modify, delete, rename, or reformat existing test files. If an existing test fails, report the failure separately instead of changing that test unless the user explicitly asks for existing tests to be repaired.
+
+## Selection Rule
+
+- Start only from the classes, packages, or behaviors explicitly named by the user.
+- Do not generate tests for unrelated classes, sibling packages, DTOs, records, generated code, or trivial accessors.
+- If the user names a package, generate tests only for production classes in that package that are directly relevant to the requested behavior.
+- If the user names a single class, do not infer or expand to additional classes without a direct dependency or explicit requirement.
+- If a class is not clearly selected, ask for the exact class or package before writing tests.
 
 ## Workflow
 
@@ -29,18 +37,20 @@ Existing tests are protected: do not modify, delete, rename, or reformat existin
 - Identify public behavior, branches, validation, exceptions, side effects, persistence calls, and external boundaries.
 - Check existing tests before adding new ones.
 - Prefer testing observable behavior over private implementation details.
-- Identify only the production classes required for the requested behavior. Do not create tests for unrelated classes.
+- Keep the review bound to the user-selected classes only. Do not expand scope to additional production classes unless a direct dependency is required to exercise the selected behavior.
 - Exclude DTOs, records, value objects, generated code, and trivial data containers unless they contain meaningful behavior that is explicitly in scope.
 
 ### 3. Plan test cases
 
-Create a compact test matrix covering the requested behavior:
+Create a compact test matrix covering only the requested behavior for the selected classes:
 
 - successful or valid input
 - invalid input and rejected access
 - null, empty, missing, or boundary values where relevant
 - collaborator failure or not-found behavior
 - important branch and error responses
+
+Do not generate tests for classes outside the explicitly selected scope, even if they appear useful for coverage.
 
 Choose the narrowest appropriate test type:
 
@@ -55,6 +65,7 @@ Do not change existing tests to make the plan fit. Create new test classes or ne
 - Put tests under the matching package in `src/test/java`.
 - Make directories and files if they do not exist.
 - Create new tests only; preserve all existing test files unchanged.
+- Generate tests only for the user-selected classes and their directly required collaborators; do not add broader coverage work.
 - Use descriptive method names that state the behavior and outcome.
 - Use `@InjectMocks` for the class under test when Mockito constructor injection is appropriate, together with `@Mock` collaborators. Do not mock the class under test. If `@InjectMocks` cannot represent the required construction, use an explicit constructor and state why.
 - Mock collaborators at the boundary; do not mock the class under test.
@@ -62,10 +73,11 @@ Do not change existing tests to make the plan fit. Create new test classes or ne
 - Match functional arguments with Mockito matchers when lambdas or independently created objects are passed, for example `any(RowMapper.class)` with `eq(...)` for scalar arguments.
 - Test the actual public API of the class.
 - Keep each test focused on one behavior.
+- Do not ask for a separate approval step before writing these tests; the user selection itself is the authorization boundary.
 
 ### 5. Run Maven tests
 
-From the Maven project root, run the narrowest useful command first:
+From the Maven project root, run the narrowest useful command first. The command is based on the user-selected class or package scope, not on the entire repository unless the user explicitly selected that broader scope.
 
 ```bash
 mvn -Dtest=TargetTest test
@@ -116,7 +128,8 @@ No VS Code extension is required. Maven downloads and runs JaCoCo, and the HTML 
 - [ ] Maven project and Java version identified
 - [ ] Current implementation, dependencies, and requirements checked for freshness
 - [ ] Target code and existing tests analyzed
-- [ ] Only required production classes selected; DTOs and trivial data containers excluded
+- [ ] Only user-selected production classes included; DTOs and trivial data containers excluded
+- [ ] No additional classes or packages generated outside the selection scope
 - [ ] Relevant test cases planned
 - [ ] New JUnit 5 tests created in the matching package
 - [ ] Existing tests left unchanged

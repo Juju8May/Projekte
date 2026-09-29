@@ -1,85 +1,68 @@
 package com.lisa.api.auth;
 
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
-public class UserAuthServiceTest {
+class UserAuthServiceTest {
     @Mock
-    private UserAuthService authService;    
+    private JdbcTemplate jdbc;
+
+    @Mock
+    private PasswordHasher hasher;
 
     @Test
-    void loginReturnsResponseEntityForValidLoginRequest() {
-        UserAuthController controller = new UserAuthController(authService);
-        UserAuthService.LoginResult loginResult = new UserAuthService.LoginResult(
-            1L, "admin", "test-token", true, "test-conversation-id");
-        when(authService.login("admin", "secret")).thenReturn(loginResult);
+    void constructorCreatesConfiguredUserWhenUserAndConversationExistenceChecksPass() {
+        PasswordHasher.Hash hash = new PasswordHasher.Hash("salt", "hash");
+        when(jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM users WHERE username = ?)", Boolean.class, "maya"))
+                .thenReturn(false);
+        when(jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)", Boolean.class, "maya"))
+                .thenReturn(true);
+        when(hasher.create("secret")).thenReturn(hash);
+        when(jdbc.update(
+                "INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?)",
+                "maya", "hash", "salt", "maya"))
+                .thenReturn(1);
 
-        ResponseEntity<?> response = controller.login(
-                new UserAuthController.LoginRequest("  admin  ", "secret"));
+        UserAuthService service = new UserAuthService(jdbc, hasher, "maya", "secret", "maya");
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(
-                Map.of("token", "test-token", "conversationId", "test-conversation-id", "expiresInSeconds", 8 * 60 * 60),
-                response.getBody());
+        assertNotNull(service);
+        verify(jdbc).update(
+                "INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?)",
+                "maya", "hash", "salt", "maya");
     }
 
     @Test
-    void loginReturnsUnauthorizedForInvalidLoginRequest() {
-        UserAuthController controller = new UserAuthController(authService);
-        when(authService.login("admin", "wrongpassword")).thenReturn(null);
+    void registrationCreatesNewConversationAndReturnsValidSession() {
+        when(jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM users WHERE username = ?)", Boolean.class, "newuser"))
+                .thenReturn(false);
+        when(hasher.create("secret")).thenReturn(new PasswordHasher.Hash("salt", "hash"));
+        when(jdbc.queryForObject(
+                eq("INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?) RETURNING id"),
+                eq(Long.class), eq("newuser"), eq("hash"), eq("salt"), any(String.class)))
+                .thenReturn(12L);
 
-        ResponseEntity<?> response = controller.login(
-                new UserAuthController.LoginRequest("  admin  ", "wrongpassword"));
+        UserAuthService service = new UserAuthService(jdbc, hasher, "maya", "", "maya");
+        UserAuthService.LoginResult result = service.register("newuser", "secret");
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    void registerReturnsResponseEntityForValidRegisterRequest() {
-        UserAuthController controller = new UserAuthController(authService);
-        UserAuthService.LoginResult registerResult = new UserAuthService.LoginResult(
-            1L, "newuser", "test-token", true, "test-conversation-id");
-        when(authService.register("newuser", "password")).thenReturn(registerResult);
-
-        ResponseEntity<?> response = controller.register(
-                new UserAuthController.LoginRequest("  newuser  ", "password"));
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(
-                Map.of("token", "test-token", "conversationId", "test-conversation-id", "expiresInSeconds", 8 * 60 * 60),
-                response.getBody());
-    }
-
-    @Test
-    void sessionReturnsAuthenticatedForValidBearerToken() {
-        UserAuthController controller = new UserAuthController(authService);
-        UserAuthService.UserSession session = new UserAuthService.UserSession(
-                "admin", "conversation-1", java.time.Instant.now().plusSeconds(60));
-        when(authService.session("test-token")).thenReturn(session);
-
-        ResponseEntity<Map<String, Object>> response = controller.session("Bearer test-token");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Map.of("authenticated", true, "conversationId", "conversation-1"), response.getBody());
-    }
-
-    @Test
-    void sessionReturnsUnauthenticatedWithoutToken() {
-        UserAuthController controller = new UserAuthController(authService);
-        when(authService.session("")).thenReturn(null);
-
-        ResponseEntity<Map<String, Object>> response = controller.session(null);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(Map.of("authenticated", false), response.getBody());
+        assertNotNull(result);
+        assertTrue(result.valid());
+        assertTrue(result.conversationId().startsWith("user-"));
+        assertNotNull(service.session(result.token()));
+        verify(jdbc).update(
+                eq("INSERT INTO conversations (id, name, initials, status, topic) VALUES (?, ?, ?, 'online', 'A little check-in')"),
+                eq(result.conversationId()), eq("newuser"), eq("NE"));
     }
 }
