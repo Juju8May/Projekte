@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiSecurityFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.security</a> &gt; <span class="el_source">ApiSecurityFilter.java</span></div><h1>ApiSecurityFilter.java</h1><pre class="source lang-java linenums">package com.lisa.api.security;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiSecurityFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.security</a> &gt; <span class="el_source">ApiSecurityFilter.java</span></div><h1>ApiSecurityFilter.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">package com.lisa.api.security;</span>
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,9 +24,9 @@ public class ApiSecurityFilter extends OncePerRequestFilter {
     private final int limitPerMinute;
 <span class="fc" id="L25">    private final ConcurrentHashMap&lt;String, Window&gt; windows = new ConcurrentHashMap&lt;&gt;();</span>
 
-    public ApiSecurityFilter(
+<span class="fc" id="L27">    public ApiSecurityFilter(</span>
             @Value(&quot;${app.security.api-key}&quot;) String apiKey,
-<span class="fc" id="L29">            @Value(&quot;${app.security.rate-limit-per-minute:60}&quot;) int limitPerMinute) {</span>
+            @Value(&quot;${app.security.rate-limit-per-minute:60}&quot;) int limitPerMinute) {
 <span class="fc" id="L30">        this.apiKey = apiKey;</span>
 <span class="fc" id="L31">        this.limitPerMinute = Math.max(1, limitPerMinute);</span>
 <span class="fc" id="L32">    }</span>
@@ -44,8 +44,8 @@ public class ApiSecurityFilter extends OncePerRequestFilter {
         }
 
 <span class="fc" id="L46">        String suppliedKey = request.getHeader(&quot;X-Api-Key&quot;);</span>
-<span class="pc bpc" id="L47" title="2 of 6 branches missed.">        if (apiKey.isBlank() || suppliedKey == null || !MessageDigest.isEqual(</span>
-<span class="fc" id="L48">                apiKey.getBytes(StandardCharsets.UTF_8), suppliedKey.getBytes(StandardCharsets.UTF_8))) {</span>
+<span class="fc bfc" id="L47" title="All 4 branches covered.">        if (apiKey.isBlank() || suppliedKey == null || !MessageDigest.isEqual(</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">                apiKey.getBytes(StandardCharsets.UTF_8), suppliedKey.getBytes(StandardCharsets.UTF_8))) {</span>
 <span class="fc" id="L49">            reject(response, HttpServletResponse.SC_UNAUTHORIZED, &quot;Unauthorized&quot;);</span>
 <span class="fc" id="L50">            return;</span>
         }
@@ -53,17 +53,17 @@ public class ApiSecurityFilter extends OncePerRequestFilter {
 <span class="fc" id="L53">        String clientKey = request.getRemoteAddr();</span>
 <span class="fc" id="L54">        Window window = windows.compute(clientKey, (key, current) -&gt; {</span>
 <span class="fc" id="L55">            long now = Instant.now().getEpochSecond();</span>
-<span class="pc bpc" id="L56" title="3 of 4 branches missed.">            if (current == null || now - current.startedAt &gt;= 60) return new Window(now, 1);</span>
-<span class="nc" id="L57">            return new Window(current.startedAt, current.count + 1);</span>
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">            if (current == null || now - current.startedAt &gt;= 60) return new Window(now, 1);</span>
+<span class="fc" id="L57">            return new Window(current.startedAt, current.count + 1);</span>
         });
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (window.count &gt; limitPerMinute) {</span>
-<span class="nc" id="L60">            response.setHeader(HttpHeaders.RETRY_AFTER, &quot;60&quot;);</span>
-<span class="nc" id="L61">            reject(response, 429, &quot;Too many requests&quot;);</span>
-<span class="nc" id="L62">            return;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (window.count &gt; limitPerMinute) {</span>
+<span class="fc" id="L60">            response.setHeader(HttpHeaders.RETRY_AFTER, &quot;60&quot;);</span>
+<span class="fc" id="L61">            reject(response, 429, &quot;Too many requests&quot;);</span>
+<span class="fc" id="L62">            return;</span>
         }
 
 <span class="fc" id="L65">        SecurityContextHolder.getContext().setAuthentication(</span>
-                new UsernamePasswordAuthenticationToken(&quot;api-client&quot;, null, AuthorityUtils.NO_AUTHORITIES));
+<span class="fc" id="L66">                new UsernamePasswordAuthenticationToken(&quot;api-client&quot;, null, AuthorityUtils.NO_AUTHORITIES));</span>
 <span class="fc" id="L67">        chain.doFilter(request, response);</span>
 <span class="fc" id="L68">    }</span>
 
@@ -73,6 +73,6 @@ public class ApiSecurityFilter extends OncePerRequestFilter {
 <span class="fc" id="L73">        response.getWriter().write(&quot;{\&quot;error\&quot;:\&quot;&quot; + message + &quot;\&quot;}&quot;);</span>
 <span class="fc" id="L74">    }</span>
 
-<span class="fc" id="L76">    private record Window(long startedAt, int count) { }</span>
+    private record Window(long startedAt, int count) { }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

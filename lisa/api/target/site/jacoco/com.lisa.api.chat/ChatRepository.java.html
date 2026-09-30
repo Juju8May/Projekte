@@ -47,9 +47,9 @@ public class ChatRepository {
                 INSERT INTO messages (conversation_id, role, text, read_at)
                 VALUES (?, ?, ?, CASE WHEN ? = 'lisa' THEN NOW() ELSE NULL END)
                 RETURNING id, role, text, to_char(created_at, 'HH12:MI AM') AS time
-<span class="nc" id="L50">                &quot;&quot;&quot;, (rs, rowNum) -&gt; new MessageResponse(</span>
+<span class="pc" id="L50">                &quot;&quot;&quot;, (rs, rowNum) -&gt; new MessageResponse(</span>
 <span class="nc" id="L51">                rs.getLong(&quot;id&quot;), rs.getString(&quot;role&quot;), rs.getString(&quot;text&quot;), rs.getString(&quot;time&quot;)),</span>
-                conversationId, role, text, role);
+<span class="fc" id="L52">                conversationId, role, text, role);</span>
     }
 
     public boolean conversationExists(String conversationId) {

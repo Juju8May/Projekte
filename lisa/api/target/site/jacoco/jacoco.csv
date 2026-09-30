@@ -1,6 +1,6 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
 lisa-api,com.lisa.api.chat,ChatDtos.CreateMessageRequest,0,6,0,0,0,1,0,1,0,1
-lisa-api,com.lisa.api.chat,ChatRepository,16,116,0,0,2,14,1,7,1,7
+lisa-api,com.lisa.api.chat,ChatRepository,16,116,0,0,1,16,1,7,1,7
 lisa-api,com.lisa.api.chat,ChatDtos.ConversationResponse,0,30,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.chat,ChatDtos.MessageResponse,0,15,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.chat,ChatController,3,71,3,9,1,12,3,10,0,7
@@ -8,15 +8,15 @@ lisa-api,com.lisa.api.auth,UserAuthController,0,104,1,9,0,14,1,8,0,4
 lisa-api,com.lisa.api.auth,PasswordHasher.Hash,0,9,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.auth,AuthController.LoginRequest,0,9,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.auth,PasswordHasher,7,66,0,0,2,12,0,5,0,5
-lisa-api,com.lisa.api.auth,UserAuthService,71,248,6,6,7,33,5,9,1,7
-lisa-api,com.lisa.api.auth,AuthService,66,91,5,3,8,17,6,4,2,4
+lisa-api,com.lisa.api.auth,UserAuthService,6,313,3,9,1,40,3,11,0,8
+lisa-api,com.lisa.api.auth,AuthService,59,98,4,4,5,20,5,5,2,4
 lisa-api,com.lisa.api.auth,UserAuthService.LoginResult,0,18,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.auth,AuthService.Session,0,9,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.auth,AuthController,0,64,1,7,0,9,1,6,0,3
 lisa-api,com.lisa.api.auth,UserAuthService.UserSession,0,12,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.auth,UserAuthController.LoginRequest,0,9,0,0,0,1,0,1,0,1
-lisa-api,com.lisa.api.security,SecurityConfig,85,61,0,2,15,16,10,4,10,3
-lisa-api,com.lisa.api.security,ApiSecurityFilter,27,112,6,10,4,28,5,7,0,4
+lisa-api,com.lisa.api.security,SecurityConfig,77,61,0,2,16,16,10,4,10,3
+lisa-api,com.lisa.api.security,ApiSecurityFilter,0,139,2,14,0,33,2,10,0,4
 lisa-api,com.lisa.api.security,ApiSecurityFilter.Window,0,9,0,0,0,1,0,1,0,1
 lisa-api,com.lisa.api.web,ApiExceptionHandler,0,16,0,0,0,4,0,3,0,3
 lisa-api,com.lisa.api,LisaApiApplication,8,0,0,0,3,0,2,0,2,0

@@ -20,8 +20,8 @@ public class SecurityConfig {
     private final ApiSecurityFilter apiSecurityFilter;
     private final List&lt;String&gt; allowedOrigins;
 
-    public SecurityConfig(ApiSecurityFilter apiSecurityFilter,
-<span class="fc" id="L24">                          @Value(&quot;${app.security.allowed-origins}&quot;) String allowedOrigins) {</span>
+<span class="fc" id="L23">    public SecurityConfig(ApiSecurityFilter apiSecurityFilter,</span>
+                          @Value(&quot;${app.security.allowed-origins}&quot;) String allowedOrigins) {
 <span class="fc" id="L25">        this.apiSecurityFilter = apiSecurityFilter;</span>
 <span class="fc" id="L26">        this.allowedOrigins = Arrays.stream(allowedOrigins.split(&quot;,&quot;))</span>
 <span class="fc" id="L27">                .map(String::trim)</span>
@@ -39,7 +39,7 @@ public class SecurityConfig {
 <span class="nc" id="L39">                        .frameOptions(frame -&gt; frame.deny())</span>
 <span class="nc" id="L40">                        .contentTypeOptions(content -&gt; { })</span>
 <span class="nc" id="L41">                        .referrerPolicy(referrer -&gt; referrer.policy(</span>
-                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+<span class="nc" id="L42">                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))</span>
 <span class="nc" id="L43">                        .permissionsPolicy(permissions -&gt; permissions.policy(&quot;camera=(), microphone=(), geolocation=()&quot;)))</span>
 <span class="nc" id="L44">                .authorizeHttpRequests(auth -&gt; auth</span>
 <span class="nc" id="L45">                        .requestMatchers(&quot;/actuator/health&quot;).permitAll()</span>

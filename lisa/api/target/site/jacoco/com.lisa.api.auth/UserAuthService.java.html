@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.auth</a> &gt; <span class="el_source">UserAuthService.java</span></div><h1>UserAuthService.java</h1><pre class="source lang-java linenums">    package com.lisa.api.auth;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lisa-api</a> &gt; <a href="index.source.html" class="el_package">com.lisa.api.auth</a> &gt; <span class="el_source">UserAuthService.java</span></div><h1>UserAuthService.java</h1><pre class="source lang-java linenums"><span class="fc" id="L1">    package com.lisa.api.auth;</span>
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,14 +16,14 @@ public class UserAuthService {
     private final String defaultUsername;
 <span class="fc" id="L17">    private final ConcurrentHashMap&lt;String, UserSession&gt; sessions = new ConcurrentHashMap&lt;&gt;();</span>
 
-    public UserAuthService(JdbcTemplate jdbc, PasswordHasher hasher,
+<span class="fc" id="L19">    public UserAuthService(JdbcTemplate jdbc, PasswordHasher hasher,</span>
                            @Value(&quot;${LISA_USER_USERNAME:maya}&quot;) String defaultUsername,
                            @Value(&quot;${LISA_USER_PASSWORD:}&quot;) String defaultPassword,
-<span class="fc" id="L22">                           @Value(&quot;${LISA_USER_CONVERSATION_ID:maya}&quot;) String conversationId) {</span>
+                           @Value(&quot;${LISA_USER_CONVERSATION_ID:maya}&quot;) String conversationId) {
 <span class="fc" id="L23">        this.jdbc = jdbc;</span>
 <span class="fc" id="L24">        this.hasher = hasher;</span>
 <span class="fc" id="L25">        this.defaultUsername = defaultUsername;</span>
-<span class="pc bpc" id="L26" title="1 of 2 branches missed.">        if (!defaultPassword.isBlank()) ensureUser(defaultPassword, conversationId);</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (!defaultPassword.isBlank()) ensureUser(defaultPassword, conversationId);</span>
 <span class="fc" id="L27">    }</span>
 
     public LoginResult login(String username, String password) {
@@ -48,7 +48,7 @@ public class UserAuthService {
 <span class="fc" id="L48">        String initials = username.substring(0, Math.min(2, username.length())).toUpperCase();</span>
 <span class="fc" id="L49">        PasswordHasher.Hash hash = hasher.create(password);</span>
 <span class="fc" id="L50">        jdbc.update(&quot;INSERT INTO conversations (id, name, initials, status, topic) VALUES (?, ?, ?, 'online', 'A little check-in')&quot;,</span>
-                conversationId, username, initials);
+<span class="fc" id="L51">                conversationId, username, initials);</span>
 <span class="fc" id="L52">        long userId = jdbc.queryForObject(&quot;INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?) RETURNING id&quot;,</span>
 <span class="fc" id="L53">                Long.class, username, hash.hash(), hash.salt(), conversationId);</span>
 <span class="fc" id="L54">        String token = UUID.randomUUID() + UUID.randomUUID().toString();</span>
@@ -66,16 +66,16 @@ public class UserAuthService {
     }
 
     private void ensureUser(String password, String conversationId) {
-<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (Boolean.TRUE.equals(jdbc.queryForObject(&quot;SELECT EXISTS (SELECT 1 FROM users WHERE username = ?)&quot;, Boolean.class, defaultUsername))) return;</span>
-<span class="nc bnc" id="L70" title="All 2 branches missed.">        if (!Boolean.TRUE.equals(jdbc.queryForObject(&quot;SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)&quot;, Boolean.class, conversationId))) {</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (Boolean.TRUE.equals(jdbc.queryForObject(&quot;SELECT EXISTS (SELECT 1 FROM users WHERE username = ?)&quot;, Boolean.class, defaultUsername))) return;</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (!Boolean.TRUE.equals(jdbc.queryForObject(&quot;SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)&quot;, Boolean.class, conversationId))) {</span>
 <span class="nc" id="L71">            throw new IllegalStateException(&quot;Configured user conversation does not exist&quot;);</span>
         }
-<span class="nc" id="L73">        PasswordHasher.Hash hash = hasher.create(password);</span>
-<span class="nc" id="L74">        jdbc.update(&quot;INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?)&quot;,</span>
-<span class="nc" id="L75">                defaultUsername, hash.hash(), hash.salt(), conversationId);</span>
-<span class="nc" id="L76">    }</span>
+<span class="fc" id="L73">        PasswordHasher.Hash hash = hasher.create(password);</span>
+<span class="fc" id="L74">        jdbc.update(&quot;INSERT INTO users (username, password_hash, password_salt, conversation_id) VALUES (?, ?, ?, ?)&quot;,</span>
+<span class="fc" id="L75">                defaultUsername, hash.hash(), hash.salt(), conversationId);</span>
+<span class="fc" id="L76">    }</span>
 
-<span class="fc" id="L78">    public record LoginResult(long id, String username, String token, boolean valid, String conversationId) { }</span>
-<span class="fc" id="L79">    public record UserSession(String username, String conversationId, Instant expiresAt) { }</span>
+    public record LoginResult(long id, String username, String token, boolean valid, String conversationId) { }
+    public record UserSession(String username, String conversationId, Instant expiresAt) { }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

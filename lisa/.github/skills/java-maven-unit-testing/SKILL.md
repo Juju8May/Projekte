@@ -1,6 +1,6 @@
 ---
 name: java-maven-unit-testing
-description: 'Use when working on Java Maven projects that need unit-test analysis, test planning, JUnit 5 test creation, Maven test execution, iterative test-failure fixes, or JaCoCo coverage evaluation.'
+description: 'Use when working on Java Maven projects that need unit-test analysis, test planning, JUnit 5 test creation, Maven test execution, JaCoCo coverage, PIT mutation testing, or SonarQube quality analysis.'
 argument-hint: '[class, package, or behavior to test]'
 user-invocable: true
 ---
@@ -123,6 +123,41 @@ Inspect the generated report under `target/site/jacoco/` and evaluate coverage f
 
 No VS Code extension is required. Maven downloads and runs JaCoCo, and the HTML report can be opened directly from `api/target/site/jacoco/index.html`.
 
+### 8. Evaluate unit-test strength with mutation testing
+
+- Check `pom.xml` and Maven profiles for PIT, Benji, or another configured mutation-testing framework before choosing a command.
+- If a framework is configured, use its documented command and existing project settings.
+- If none is configured, use PIT without editing project files when its plugin and dependencies can be resolved directly by Maven. Limit the run to the selected production classes and their tests. For example:
+
+```bash
+mvn org.pitest:pitest-maven:mutationCoverage \
+	-DtargetClasses='com.example.package.TargetClass' \
+	-DtargetTests='com.example.package.TargetClassTest'
+```
+
+- Inspect the generated report, normally under `target/pit-reports/`. Report the mutation score and relevant killed, survived, and no-coverage mutants; do not confuse mutation score with JaCoCo line or branch coverage.
+- Treat surviving behavior-changing mutants in validation, authorization, error handling, boundary conditions, and business rules as test gaps. Explain equivalent mutants and exclude generated, framework, or otherwise irrelevant mutations.
+- If mutation analysis cannot run because dependencies are unavailable, classes are incompatible, or no safe invocation is possible without changing the project, report `not available` and the concrete reason. Continue with the other checks.
+
+### 9. Evaluate SonarQube quality
+
+- Inspect `pom.xml`, Maven profiles, `sonar-project.properties`, and repository configuration for SonarQube settings before attempting server analysis.
+- When SonarQube for IDE is available, analyze only the selected production classes and review relevant bugs, vulnerabilities, security hotspots, and code smells. Do not report unrelated or informational findings as defects.
+- Run server-side analysis only when a scanner/server, project key, and required authentication are already configured. Preserve the verification lifecycle so tests and JaCoCo reports are generated first:
+
+```bash
+mvn verify sonar:sonar
+```
+
+- Use configured secure token mechanisms; never print, request, or commit credentials. Do not invent a project key or server URL.
+- Report the scanner command, project key and dashboard/report location when available, quality-gate result, and relevant findings. If only IDE analysis is available, explicitly mark the server quality gate `not available`. If the extension or server configuration is unavailable, state the exact reason.
+
+### 10. Interpret quality results together
+
+- Correlate JaCoCo line/branch gaps with surviving PIT or other mutation-analysis mutants. Code executed by tests can still be inadequately asserted if behavior-changing mutants survive.
+- Correlate relevant SonarQube findings with the affected tests and mutation results, prioritizing validation, authorization, persistence, error handling, and business behavior.
+- Distinguish production defects, test-quality gaps, coverage gaps, excluded/equivalent mutants, and analyses that could not be measured. Never estimate missing scores or claim a quality gate passed without its actual result.
+
 ## Completion checklist
 
 - [ ] Maven project and Java version identified
@@ -137,5 +172,10 @@ No VS Code extension is required. Maven downloads and runs JaCoCo, and the HTML 
 - [ ] Failures fixed and the focused command rerun
 - [ ] Broader tests executed when appropriate
 - [ ] Low JaCoCo coverage classes evaluated and targeted only when relevant
+- [ ] PIT, Benji, or another configured mutation framework checked and run when available
+- [ ] Mutation score and relevant surviving mutants reported, or concrete unavailability reason stated
+- [ ] SonarQube-for-IDE findings checked when the extension is available
+- [ ] SonarQube server analysis and quality gate run only when configuration is available; otherwise unavailability is stated
+- [ ] JaCoCo, mutation, and SonarQube results interpreted together without conflating their metrics
 - [ ] Tested and untested production classes listed separately
 - [ ] Final response names changed files and actual validation results

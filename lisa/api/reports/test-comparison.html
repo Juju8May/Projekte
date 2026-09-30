@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Testvergleich · Lisa API</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #121a2d;
+      --panel-strong: #17223a;
+      --line: #273550;
+      --text: #ecf2ff;
+      --muted: #9aa8c1;
+      --regular: #66d9c1;
+      --student: #a995ff;
+      --warning: #ffcc80;
+      --good: #8fe0ad;
+      --radius: 18px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 85% -10%, rgba(113, 92, 255, .2), transparent 38rem),
+        radial-gradient(ellipse at -10% 20%, rgba(46, 190, 164, .12), transparent 34rem),
+        var(--bg);
+      line-height: 1.55;
+    }
+    .shell { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0 70px; }
+    .eyebrow { color: var(--regular); font-size: .76rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { max-width: 760px; margin: 12px 0 10px; font-size: clamp(2.1rem, 5vw, 3.8rem); line-height: 1.06; letter-spacing: -.045em; }
+    .intro { max-width: 750px; color: var(--muted); font-size: 1.06rem; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 32px 0 44px; }
+    .metric, .card { background: linear-gradient(145deg, rgba(23, 34, 58, .95), rgba(18, 26, 45, .95)); border: 1px solid var(--line); border-radius: var(--radius); }
+    .metric { padding: 20px 22px; }
+    .metric-label { color: var(--muted); font-size: .9rem; }
+    .metric-value { margin-top: 5px; font-size: 2rem; font-weight: 760; letter-spacing: -.04em; }
+    .metric-note { margin-top: 4px; color: var(--muted); font-size: .8rem; }
+    .metric.regular .metric-value { color: var(--regular); }
+    .metric.student .metric-value { color: var(--student); }
+    section { margin-top: 42px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 17px; }
+    h2 { margin: 0; font-size: 1.35rem; letter-spacing: -.02em; }
+    .section-note { color: var(--muted); font-size: .86rem; }
+    .card { padding: 22px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: .85rem; margin-bottom: 23px; }
+    .key { display: inline-flex; align-items: center; gap: 8px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.regular { background: var(--regular); }
+    .dot.student { background: var(--student); }
+    .chart { display: grid; gap: 21px; }
+    .chart-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 90px; gap: 14px; align-items: center; }
+    .chart-label { font-weight: 650; }
+    .tracks { display: grid; gap: 7px; }
+    .track { position: relative; height: 13px; overflow: hidden; background: #0b1222; border-radius: 99px; }
+    .bar { height: 100%; min-width: 2px; border-radius: inherit; transition: width .7s ease; }
+    .bar.regular { background: linear-gradient(90deg, #31b9a0, var(--regular)); }
+    .bar.student { background: linear-gradient(90deg, #7964e8, var(--student)); }
+    .chart-count { text-align: right; color: var(--muted); font-size: .86rem; font-variant-numeric: tabular-nums; }
+    .scale { display: flex; justify-content: space-between; margin: 14px 104px 0 144px; color: #74839e; font-size: .72rem; }
+    .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .suite-title { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 1.05rem; }
+    .suite-title .dot { width: 12px; height: 12px; }
+    .suite-total { margin-left: auto; color: var(--muted); font-weight: 500; font-size: .84rem; }
+    .test-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: .87rem; }
+    .test-list li + li { margin-top: 7px; }
+    code { color: #d5dfff; font-size: .82em; overflow-wrap: anywhere; }
+    .findings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px; }
+    .finding { padding: 17px; background: rgba(18, 26, 45, .76); border: 1px solid var(--line); border-radius: 15px; }
+    .badge { display: inline-block; padding: 3px 9px; margin-bottom: 9px; border-radius: 99px; color: var(--warning); background: rgba(255, 204, 128, .1); font-size: .72rem; font-weight: 700; }
+    .badge.good { color: var(--good); background: rgba(143, 224, 173, .1); }
+    .finding h3 { margin: 0 0 6px; font-size: .95rem; }
+    .finding p { margin: 0; color: var(--muted); font-size: .86rem; }
+    .footnote { margin-top: 22px; padding: 14px 16px; border-left: 3px solid var(--student); color: var(--muted); background: rgba(169, 149, 255, .07); font-size: .85rem; }
+    footer { padding-top: 32px; margin-top: 44px; border-top: 1px solid var(--line); color: #7786a0; font-size: .8rem; }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 28px, 620px); padding-top: 34px; }
+      .summary { grid-template-columns: 1fr; gap: 9px; margin: 24px 0 34px; }
+      .metric { padding: 15px 18px; }
+      .metric-value { display: inline-block; margin-right: 8px; font-size: 1.55rem; }
+      .metric-note { display: inline; }
+      .comparison-grid, .findings { grid-template-columns: 1fr; }
+      .chart-row { grid-template-columns: 82px minmax(0, 1fr) 72px; gap: 8px; }
+      .scale { margin-left: 90px; margin-right: 80px; }
+      .card { padding: 16px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="eyebrow">Lisa API · Testqualität</div>
+      <h1>Zwei Testsuiten.<br>Ein gemeinsamer Qualitätsblick.</h1>
+      <p class="intro">Vergleich der regulären Unit-Tests mit den Tests im <em>student</em>-Paket. Die Student-Tests werden im selben Maven-Testlauf ausgeführt; Balken zeigen die Anzahl der JUnit-Tests je Bereich.</p>
+    </header>
+
+    <div class="summary" aria-label="Zusammenfassung der Testanzahlen">
+      <article class="metric regular"><div class="metric-label">Reguläre Tests</div><div class="metric-value">44</div><div class="metric-note">11 Klassen · 4 Bereiche</div></article>
+      <article class="metric student"><div class="metric-label">Student-Tests</div><div class="metric-value">32</div><div class="metric-note">8 Klassen · 4 Bereiche</div></article>
+      <article class="metric"><div class="metric-label">Zusammen ausgeführt</div><div class="metric-value">76</div><div class="metric-note">0 Fehler im letzten verifizierten Lauf</div></article>
+    </div>
+
+    <section aria-labelledby="chart-title">
+      <div class="section-head"><h2 id="chart-title">Tests nach Paket</h2><div class="section-note">Anzahl der @Test-Methoden</div></div>
+      <div class="card">
+        <div class="legend"><span class="key"><i class="dot regular"></i>Regulär</span><span class="key"><i class="dot student"></i>Student</span></div>
+        <div class="chart" role="img" aria-label="Balkendiagramm mit Testanzahlen pro Paket">
+          <div class="chart-row"><div class="chart-label">Auth</div><div class="tracks"><div class="track"><div class="bar regular" style="width:100%"></div></div><div class="track"><div class="bar student" style="width:54.2%"></div></div></div><div class="chart-count">24 / 13</div></div>
+          <div class="chart-row"><div class="chart-label">Chat</div><div class="tracks"><div class="track"><div class="bar regular" style="width:45.8%"></div></div><div class="track"><div class="bar student" style="width:41.7%"></div></div></div><div class="chart-count">11 / 10</div></div>
+          <div class="chart-row"><div class="chart-label">Security</div><div class="tracks"><div class="track"><div class="bar regular" style="width:29.2%"></div></div><div class="track"><div class="bar student" style="width:29.2%"></div></div></div><div class="chart-count">7 / 7</div></div>
+          <div class="chart-row"><div class="chart-label">Web</div><div class="tracks"><div class="track"><div class="bar regular" style="width:8.3%"></div></div><div class="track"><div class="bar student" style="width:8.3%"></div></div></div><div class="chart-count">2 / 2</div></div>
+        </div>
+        <div class="scale"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="classes-title">
+      <div class="section-head"><h2 id="classes-title">Klassen je Suite</h2><div class="section-note">Die Suite-Namen sind direkt anklickbar über die Quelldateien im Repository.</div></div>
+      <div class="comparison-grid">
+        <article class="card">
+          <h3 class="suite-title"><i class="dot regular"></i>Reguläre Suite <span class="suite-total">44 Tests</span></h3>
+          <ul class="test-list">
+            <li><code>auth</code> · AuthController (5), AuthService (3), PasswordHasher (3), UserAuthController (6), UserAuthService (2), UserAuthServiceBehavior (5)</li>
+            <li><code>chat</code> · ChatController (6), ChatRepository (5)</li>
+            <li><code>security</code> · ApiSecurityFilter (6), SecurityConfig (1)</li>
+            <li><code>web</code> · ApiExceptionHandler (2)</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3 class="suite-title"><i class="dot student"></i>Student Suite <span class="suite-total">32 Tests</span></h3>
+          <ul class="test-list">
+            <li><code>auth</code> · AuthControllerStudent (5), AuthServiceStudent (3), UserAuthServiceStudent (5)</li>
+            <li><code>chat</code> · ChatControllerStudent (5), ChatRepositoryStudent (5)</li>
+            <li><code>security</code> · ApiSecurityFilterStudent (6), SecurityConfigStudent (1)</li>
+            <li><code>web</code> · ApiExceptionHandlerStudent (2)</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="quality-title">
+      <div class="section-head"><h2 id="quality-title">Was der Vergleich zeigt</h2><div class="section-note">Qualität bedeutet mehr als Testanzahl</div></div>
+      <div class="findings">
+        <article class="finding"><span class="badge">Abdeckungslücke</span><h3>Testname und Testziel weichen ab</h3><p><code>UserAuthServiceStudentTest</code> testet tatsächlich <code>UserAuthController</code>. Dadurch sind die Fälle weitgehend doppelt, während Service-Verhalten nur die reguläre Suite abdeckt.</p></article>
+        <article class="finding"><span class="badge">Doppelte Fälle</span><h3>Security und Web sind fast identisch</h3><p>Filter, CORS und Exception-Handler prüfen in beiden Gruppen größtenteils dieselben Fälle. Das erhöht die Testzahl, aber nicht entsprechend die Verhaltensabdeckung.</p></article>
+        <article class="finding"><span class="badge good">Stärker regulär</span><h3>Zusätzliche Grenzfälle</h3><p>Die regulären Chat-Controller-Tests prüfen zusätzlich ungültige IDs. Die reguläre Auth-Suite enthält außerdem einen Passwort-Hasher-Test und mehr Service-Verhalten.</p></article>
+      </div>
+      <div class="footnote"><strong>Ausführung:</strong> Der letzte Lauf von <code>mvn verify</code> führte alle 76 Tests aus: 0 Fehler, 0 Auslassungen. JaCoCo misst Ausführung/Branches; eine erfolgreiche Ausführung allein beweist nicht, dass ein Test eine Verhaltensänderung erkennt. PIT-Mutationsergebnisse sind in diesem Vergleich nicht enthalten.</div>
+    </section>
+
+    <footer>Statischer Vergleich der aktuellen Tests im Repository · Balkenskala normalisiert auf das größte Paket (24 Tests). Die Grafik benötigt keine externen Bibliotheken oder Netzwerkzugriffe.</footer>
+  </main>
+</body>
+</html>

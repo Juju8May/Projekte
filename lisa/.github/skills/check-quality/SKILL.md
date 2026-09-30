@@ -21,6 +21,7 @@ Evaluate newly written or changed Java classes against the current project requi
 - Check the current implementation, `pom.xml`, dependencies, configuration, and stated requirements. Do not rely on stale assumptions or old APIs.
 - Detect whether the project configures Benji, PIT, or another mutation-testing framework before running mutation analysis. Do not silently treat line coverage as a substitute for mutation coverage.
 - Check SonarQube-for-IDE findings for the reviewed Java classes when the extension is available in the workspace.
+- Include SonarQube in the assessment only when usable IDE findings or a configured server analysis are actually accessible. Otherwise omit it from findings and the final report.
 
 ## Quality Checks
 
@@ -106,8 +107,9 @@ mvn org.pitest:pitest-maven:mutationCoverage \
 
 ### 7. SonarQube quality analysis
 
+- SonarQube is optional. If neither IDE findings nor a configured server analysis is accessible, skip this section completely: do not report it as `not available`, an unresolved issue, or a quality gap.
 - Inspect `api/pom.xml`, `sonar-project.properties`, Maven profiles, and repository configuration for SonarQube settings before running a server analysis.
-- Use the installed SonarQube-for-IDE extension to inspect the reviewed Java classes for bugs, vulnerabilities, security hotspots, code smells, and relevant quality-rule findings. Keep the review limited to the requested classes and direct behavior.
+- When accessible, use SonarQube-for-IDE to inspect the reviewed Java classes for bugs, vulnerabilities, security hotspots, code smells, and relevant quality-rule findings. Keep the review limited to the requested classes and direct behavior.
 - Treat confirmed SonarQube findings in production code as review findings, ordered by severity. Do not report informational or unrelated findings as defects.
 - When a SonarQube server, project key, and authentication are configured, run the scanner from the Maven project directory:
 
@@ -117,12 +119,12 @@ mvn verify sonar:sonar
 ```
 
 - Preserve the existing `verify` lifecycle so JaCoCo is generated before SonarQube reads coverage data. Use `-Dsonar.host.url=...` and the configured secure token mechanism only when required by the local setup; never print or commit tokens.
-- If only the IDE extension is available, record the IDE findings and state that server-side quality-gate status is `not available`. Do not claim a passed SonarQube quality gate without the actual scanner result.
-- Record the scanner command, project key, report/dashboard location, quality-gate result, and relevant findings. Report `not measured` or `not available` with the concrete reason when analysis cannot run.
+- If only IDE analysis is accessible, record its findings. Do not claim a server quality gate passed without an actual scanner result.
+- When SonarQube is included, record the scanner command, project key, dashboard/report location, quality-gate result, and relevant findings. If access is missing, omit SonarQube instead of reporting an unavailable analysis.
 
 ### 8. Cross-analyze quality results
 
-- Analyze the results from JaCoCo, SonarQube, PIT, and Benji together for the reviewed production classes. Do not report tool output as a quality conclusion without interpreting its relevance to the requested behavior.
+- Analyze JaCoCo, PIT, and Benji results together for the reviewed production classes. Include SonarQube only when usable findings were obtained. Do not report tool output as a quality conclusion without interpreting its relevance to the requested behavior.
 - Correlate low line or branch coverage with surviving PIT or Benji mutants. Treat a covered line with surviving behavior-changing mutants as evidence that tests execute code without sufficiently checking its outcome.
 - Correlate SonarQube bugs, vulnerabilities, security hotspots, and code smells with mutation results and existing test cases. Prioritize findings that affect validation, authorization, error handling, persistence, security, or business rules.
 - Distinguish clearly between:
@@ -152,8 +154,8 @@ Then provide:
 - full-suite result
 - JaCoCo coverage for the reviewed classes
 - mutation-testing framework used, command, report location, mutation score, and surviving relevant mutants
-- SonarQube-for-IDE findings and, when available, scanner command, project key, quality-gate result, and relevant findings
-- cross-analysis of JaCoCo, SonarQube, PIT, and Benji results, including discrepancies and unavailable analyses
+- SonarQube-for-IDE findings and, when accessible, scanner command, project key, and quality-gate result; omit this item entirely when SonarQube is inaccessible
+- cross-analysis of JaCoCo, PIT, and Benji; include SonarQube only when its findings are accessible
 - tested production classes listed separately
 - untested production classes listed separately
 - commands that were actually run
@@ -180,3 +182,6 @@ Use `not measured` or `not available` rather than estimating any result. Disting
 - [ ] Surviving mutants, SonarQube findings, coverage gaps, exclusions, and unavailable analyses distinguished
 - [ ] Tested and untested production classes listed separately
 - [ ] Findings and actual validation results reported
+- [ ] SonarQube evaluated only when IDE findings or server analysis are accessible; otherwise omitted from the assessment
+- [ ] SonarQube quality gate reported only when the scanner actually ran
+- [ ] JaCoCo, PIT, and Benji results cross-analyzed; include SonarQube only when accessible
