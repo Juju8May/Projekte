@@ -1,4 +1,4 @@
-package com.lisa.api.auth;
+package com.lisa.api.student.auth;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -14,64 +14,59 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
+import com.lisa.api.auth.AuthService;
+import com.lisa.api.auth.PasswordHasher;
+
 @ExtendWith(MockitoExtension.class)
-public class AuthServiceTest {
+class AuthServiceStudentTest {
     @Mock
     private JdbcTemplate jdbc;
 
     @Mock
     private PasswordHasher hasher;
 
-    private AuthService authService;
-
     @Test
     void loginReturnsTokenForValidCredentials() {
         String adminUsername = "admin";
-        String adminPassword = "secret";
-        authService = new AuthService(jdbc, hasher, adminUsername, "");
+        AuthService authService = new AuthService(jdbc, hasher, adminUsername, "");
         when(jdbc.query(
                 eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername)))
+                any(RowMapper.class), eq(adminUsername)))
                 .thenReturn(java.util.List.of(true));
-        when(jdbc.update("UPDATE admin_users SET last_login_at = NOW() WHERE username = ?", "admin")).thenReturn(1);
+        when(jdbc.update("UPDATE admin_users SET last_login_at = NOW() WHERE username = ?", "admin"))
+                .thenReturn(1);
 
-        String token = authService.login(adminUsername, adminPassword);
+        String token = authService.login(adminUsername, "secret");
 
         assertEquals(72, token.length());
         verify(jdbc).query(
                 eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername));
+                any(RowMapper.class), eq(adminUsername));
         verify(jdbc).update("UPDATE admin_users SET last_login_at = NOW() WHERE username = ?", "admin");
     }
 
     @Test
     void loginReturnsNullForInvalidCredentials() {
-        String adminUsername = "admin";
-        String adminPassword = "wrongpassword";
-        authService = new AuthService(jdbc, hasher, adminUsername, "");
+        AuthService authService = new AuthService(jdbc, hasher, "admin", "");
         when(jdbc.query(
                 eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername)))
+                any(RowMapper.class), eq("admin")))
                 .thenReturn(java.util.List.of(false));
-        String token = authService.login(adminUsername, adminPassword);
+
+        String token = authService.login("admin", "wrongpassword");
 
         verify(jdbc).query(
                 eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq(adminUsername));
+                any(RowMapper.class), eq("admin"));
         assertEquals(null, token);
     }
 
     @Test
     void isValidReturnsTrueForValidToken() {
-        authService = new AuthService(jdbc, hasher, "admin", "");
+        AuthService authService = new AuthService(jdbc, hasher, "admin", "");
         when(jdbc.query(
                 eq("SELECT username, password_hash, password_salt FROM admin_users WHERE username = ?"),
-                any(RowMapper.class),
-                eq("admin")))
+                any(RowMapper.class), eq("admin")))
                 .thenReturn(java.util.List.of(true));
 
         String token = authService.login("admin", "secret");
@@ -79,6 +74,4 @@ public class AuthServiceTest {
         assertNotNull(token);
         assertTrue(authService.isValid(token));
     }
-
-
 }

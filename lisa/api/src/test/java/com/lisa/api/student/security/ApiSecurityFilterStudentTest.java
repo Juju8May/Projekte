@@ -1,11 +1,11 @@
-package com.lisa.api.security;
+package com.lisa.api.student.security;
 
 import java.io.IOException;
 
-import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,8 +20,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 
+import com.lisa.api.security.ApiSecurityFilter;
+
 @ExtendWith(MockitoExtension.class)
-class ApiSecurityFilterTest {
+class ApiSecurityFilterStudentTest {
     @Mock
     private FilterChain chain;
 

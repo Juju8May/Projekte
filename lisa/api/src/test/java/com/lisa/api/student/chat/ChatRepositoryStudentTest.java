@@ -1,4 +1,4 @@
-package com.lisa.api.chat;
+package com.lisa.api.student.chat;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,9 +22,10 @@ import org.springframework.jdbc.core.RowMapper;
 
 import com.lisa.api.chat.ChatDtos.ConversationResponse;
 import com.lisa.api.chat.ChatDtos.MessageResponse;
+import com.lisa.api.chat.ChatRepository;
 
 @ExtendWith(MockitoExtension.class)
-class ChatRepositoryTest {
+class ChatRepositoryStudentTest {
     @Mock
     private JdbcTemplate jdbc;
 
@@ -34,9 +35,7 @@ class ChatRepositoryTest {
     @Test
     void conversationExistsReturnsTrueWhenDatabaseFindsConversation() {
         when(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)",
-                Boolean.class,
-                "conversation-1"))
+                "SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)", Boolean.class, "conversation-1"))
                 .thenReturn(true);
 
         assertTrue(repository.conversationExists("conversation-1"));
@@ -45,9 +44,7 @@ class ChatRepositoryTest {
     @Test
     void conversationExistsReturnsFalseForNullDatabaseResult() {
         when(jdbc.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)",
-                Boolean.class,
-                "missing"))
+                "SELECT EXISTS (SELECT 1 FROM conversations WHERE id = ?)", Boolean.class, "missing"))
                 .thenReturn(null);
 
         assertFalse(repository.conversationExists("missing"));
@@ -66,9 +63,7 @@ class ChatRepositoryTest {
                         FROM messages
                         WHERE conversation_id = ?
                         ORDER BY created_at ASC, id ASC
-                        """),
-                any(RowMapper.class),
-                eq("conversation-1")))
+                        """), any(RowMapper.class), eq("conversation-1")))
                 .thenAnswer(invocation -> {
                     RowMapper<MessageResponse> mapper = invocation.getArgument(1);
                     return List.of(mapper.mapRow(resultSet, 0));
@@ -87,8 +82,7 @@ class ChatRepositoryTest {
                         INSERT INTO messages (conversation_id, role, text, read_at)
                         VALUES (?, ?, ?, CASE WHEN ? = 'lisa' THEN NOW() ELSE NULL END)
                         RETURNING id, role, text, to_char(created_at, 'HH12:MI AM') AS time
-                        """),
-                any(RowMapper.class),
+                        """), any(RowMapper.class),
                 eq("conversation-1"), eq("user"), eq("Hi"), eq("user")))
                 .thenReturn(savedMessage);
 
@@ -100,8 +94,7 @@ class ChatRepositoryTest {
                         INSERT INTO messages (conversation_id, role, text, read_at)
                         VALUES (?, ?, ?, CASE WHEN ? = 'lisa' THEN NOW() ELSE NULL END)
                         RETURNING id, role, text, to_char(created_at, 'HH12:MI AM') AS time
-                        """),
-                any(RowMapper.class),
+                        """), any(RowMapper.class),
                 eq("conversation-1"), eq("user"), eq("Hi"), eq("user"));
     }
 
@@ -122,9 +115,7 @@ class ChatRepositoryTest {
                         FROM messages
                         WHERE conversation_id = ?
                         ORDER BY created_at ASC, id ASC
-                        """),
-                any(RowMapper.class),
-                eq("conversation-1")))
+                        """), any(RowMapper.class), eq("conversation-1")))
                 .thenReturn(List.of(new MessageResponse(1L, "user", "Hi", "09:59 AM")));
         when(jdbc.query(
                 eq("""
@@ -136,8 +127,7 @@ class ChatRepositoryTest {
                         LEFT JOIN messages m ON m.conversation_id = c.id
                         GROUP BY c.id
                         ORDER BY MAX(m.created_at) DESC NULLS LAST
-                        """),
-                any(RowMapper.class)))
+                        """), any(RowMapper.class)))
                 .thenAnswer(invocation -> {
                     RowMapper<ConversationResponse> mapper = invocation.getArgument(1);
                     return List.of(mapper.mapRow(resultSet, 0));

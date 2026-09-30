@@ -1,4 +1,4 @@
-package com.lisa.api.security;
+package com.lisa.api.student.security;
 
 import java.util.List;
 
@@ -8,17 +8,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-class SecurityConfigTest {
+import com.lisa.api.security.ApiSecurityFilter;
+import com.lisa.api.security.SecurityConfig;
+
+class SecurityConfigStudentTest {
     @Test
     void corsConfigurationUsesTrimmedAllowedOriginsAndExpectedHeaders() {
         SecurityConfig config = new SecurityConfig(
-                mock(ApiSecurityFilter.class),
-                " http://localhost:3000, , https://example.com ");
+                mock(ApiSecurityFilter.class), " http://localhost:3000, , https://example.com ");
 
-        CorsConfigurationSource source = config.corsConfigurationSource();
+        CorsConfigurationSource source = ReflectionTestUtils.invokeMethod(config, "corsConfigurationSource");
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/conversations");
         CorsConfiguration cors = source.getCorsConfiguration(request);
 

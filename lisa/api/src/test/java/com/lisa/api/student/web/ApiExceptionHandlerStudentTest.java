@@ -1,4 +1,4 @@
-package com.lisa.api.web;
+package com.lisa.api.student.web;
 
 import java.util.Map;
 
@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-class ApiExceptionHandlerTest {
+import com.lisa.api.web.ApiExceptionHandler;
+
+class ApiExceptionHandlerStudentTest {
     private final ApiExceptionHandler handler = new ApiExceptionHandler();
 
     @Test
